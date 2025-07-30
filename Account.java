@@ -9,9 +9,25 @@ public class Account {
     this.balance = balance;
   }
 
-  void display() {
+  public void display() {
     System.out.println("Account Holder: " + name);
     System.out.println("Account Number: " + accNo);
     System.out.println("Current Balance: $" + balance);
+  }
+
+  public void deposit(double amount) {
+    balance += amount;
+    System.out.println("Deposited $" + amount);
+    System.out.println("New Balance: $" + balance);
+  }
+
+  public void withdraw(double amount) {
+    if (balance >= amount) {
+      balance -= amount;
+      System.out.println("Withdrew $" + amount);
+      System.out.println("New Balance: $" + balance);
+    } else {
+      System.out.println("Insufficient funds.");
+    }
   }
 }
