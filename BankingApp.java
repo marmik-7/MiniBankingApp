@@ -1,4 +1,7 @@
 import java.util.Scanner;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class BankingApp {
@@ -28,6 +31,16 @@ public class BankingApp {
 
           Account newAccount = new Account(name, accNo, balance);
           accounts.add(newAccount);
+          try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter("accounts.txt", true));
+            bw.write(newAccount.toCSV());
+            bw.newLine();
+            bw.close();
+            System.out.println("Account saved to file.");
+          } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+          }
+
           System.out.println("Account created successfully!\n");
           break;
 
@@ -49,7 +62,7 @@ public class BankingApp {
 
           for (Account acc : accounts) {
             if (acc.accNo == depositAcc) {
-              System.out.println("Enter the amount to deposit: ");
+              System.out.print("Enter the amount to deposit: ");
               double amount = sc.nextDouble();
               acc.deposit(amount);
               foundDeposit = true;
@@ -69,7 +82,7 @@ public class BankingApp {
 
           for (Account acc : accounts) {
             if (acc.accNo == withdrawAcc) {
-              System.out.println("Enter the amount to withdraw: ");
+              System.out.print("Enter the amount to withdraw: ");
               double amount = sc.nextDouble();
               acc.withdraw(amount);
               foundWithdraw = true;

@@ -30,4 +30,8 @@ public class Account {
       System.out.println("Insufficient funds.");
     }
   }
+
+  public String toCSV() {
+    return name + "," + accNo + "," + balance;
+  }
 }
