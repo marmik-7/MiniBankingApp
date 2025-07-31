@@ -1,13 +1,49 @@
 import java.util.Scanner;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class BankingApp {
+
+  public static void saveAllAccounts(ArrayList<Account> accounts) {
+    try {
+      BufferedWriter bw = new BufferedWriter(new FileWriter("accounts.txt"));
+      for (Account acc : accounts) {
+        bw.write(acc.toCSV());
+        bw.newLine();
+      }
+      bw.close();
+    } catch (IOException e) {
+      System.out.println("Error saving accounts: " + e.getMessage());
+    }
+  }
+
   public static void main(String[] args) {
     Scanner sc = new Scanner(System.in);
     ArrayList<Account> accounts = new ArrayList<>();
+
+    try {
+      BufferedReader br = new BufferedReader(new java.io.FileReader("accounts.txt"));
+      String line;
+
+      while ((line = br.readLine()) != null) {
+        String[] parts = line.split(",");
+        if (parts.length == 3) {
+          String name = parts[0];
+          int accNo = Integer.parseInt(parts[1]);
+          double balance = Double.parseDouble(parts[2]);
+          accounts.add(new Account(name, accNo, balance));
+        }
+      }
+
+      br.close();
+      System.out.println("Loaded existing accounts from file.");
+    } catch (IOException e) {
+      System.out.println("No previous accounts found (or error reading file). Starting fresh.");
+    }
 
     while (true) {
       System.out.println("Welcome to the Banking App!");
@@ -65,6 +101,7 @@ public class BankingApp {
               System.out.print("Enter the amount to deposit: ");
               double amount = sc.nextDouble();
               acc.deposit(amount);
+              saveAllAccounts(accounts);
               foundDeposit = true;
               break;
             }
@@ -85,6 +122,7 @@ public class BankingApp {
               System.out.print("Enter the amount to withdraw: ");
               double amount = sc.nextDouble();
               acc.withdraw(amount);
+              saveAllAccounts(accounts);
               foundWithdraw = true;
               break;
             }
