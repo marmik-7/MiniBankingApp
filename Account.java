@@ -1,8 +1,8 @@
 public class Account {
-  String name;
-  int accNo;
-  double balance;
-  String password;
+  private String name;
+  private int accNo;
+  private double balance;
+  private String password;
 
   public Account(String name, int accNo, double balance, String password) {
     this.name = name;
@@ -39,6 +39,22 @@ public class Account {
       System.out.println("Insufficient funds.");
       return false;
     }
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public int getAccNo() {
+    return accNo;
+  }
+
+  public double getBalance() {
+    return balance;
+  }
+
+  public boolean checkPassword(String input) {
+    return this.password.equals(input);
   }
 
   public String toCSV() {

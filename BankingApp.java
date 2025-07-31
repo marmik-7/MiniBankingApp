@@ -9,7 +9,7 @@ public class BankingApp {
 
   public static Account findAccountByNumber(ArrayList<Account> accounts, int accNo) {
     for (Account acc : accounts) {
-      if (acc.accNo == accNo)
+      if (acc.getAccNo() == accNo)
         return acc;
     }
     return null;
@@ -35,7 +35,7 @@ public class BankingApp {
       System.out.print("Enter password: ");
       String inputPass = sc.next();
 
-      if (acc.password.equals(inputPass)) {
+      if (acc.checkPassword(inputPass)) {
         return true; // ✅ correct password
       } else {
         attempts++;
@@ -79,7 +79,8 @@ public class BankingApp {
       System.out.println("3. Deposit Money");
       System.out.println("4. Withdraw Money");
       System.out.println("5. Delete Account");
-      System.out.println("6. Exit");
+      System.out.println("6. Check Balance");
+      System.out.println("7. Exit");
       System.out.print("Choose an option: ");
       int choice = sc.nextInt();
       sc.nextLine();
@@ -140,7 +141,6 @@ public class BankingApp {
               if (acc.deposit(amount)) {
                 saveAllAccounts(accounts);
                 System.out.println("Deposit successful.");
-
               }
             }
           } else {
@@ -184,6 +184,20 @@ public class BankingApp {
           break;
 
         case 6:
+          System.out.print("Enter account number to check balance: ");
+          int checkBal = sc.nextInt();
+          acc = findAccountByNumber(accounts, checkBal);
+
+          if (acc != null) {
+            if (verifyPassword(acc, sc)) {
+              System.out.println("Your current balance is: $" + acc.getBalance());
+            }
+          } else {
+            System.out.println("Account not found.");
+          }
+          break;
+
+        case 7:
           System.out.println("Exiting the Banking App. Goodbye!");
           sc.close();
           System.exit(0);
