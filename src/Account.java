@@ -1,3 +1,5 @@
+package src;
+
 public class Account {
   private String name;
   private int accNo;
@@ -30,6 +32,10 @@ public class Account {
   }
 
   public boolean withdraw(double amount) {
+    if (amount <= 0) {
+      System.out.println("Withdrawal amount must be greater than zero.");
+      return false;
+    }
     if (balance >= amount) {
       balance -= amount;
       System.out.println("Withdrew $" + amount);
