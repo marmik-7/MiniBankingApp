@@ -26,7 +26,7 @@ public class Account {
   public void display() {
     System.out.println("Account Holder: " + name);
     System.out.println("Account Number: " + accNo);
-    System.out.println("Current Balance: $" + balance);
+    System.out.printf("Current Balance: $%.2f%n", balance);
     // Password is intentionally not printed
   }
 

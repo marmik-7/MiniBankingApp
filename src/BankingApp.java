@@ -19,21 +19,25 @@ public class BankingApp {
     return null;
   }
 
-  public static Account promptAndFindAccount(ArrayList<Account> accounts, Scanner sc) {
-    System.out.print("Enter account number: ");
-    int accNo = sc.nextInt();
-    sc.nextLine(); // consume newline
-    return findAccountByNumber(accounts, accNo);
-  }
-
   public static void createAccount(ArrayList<Account> accounts, Scanner sc) {
     System.out.print("Enter account holder's name: ");
-    sc.nextLine(); // to consume leftover newline
     String name = sc.nextLine();
     System.out.print("Enter account number: ");
+    if (!sc.hasNextInt()) {
+      System.out.println("Invalid input. Account number must be numeric.");
+      sc.next(); // Clear invalid input
+      return;
+    }
     int accNo = sc.nextInt();
+    sc.nextLine();
     System.out.print("Enter initial balance: ");
+    if (!sc.hasNextDouble()) {
+      System.out.println("Invalid input. Balance must be numeric.");
+      sc.next(); // Clear invalid input
+      return;
+    }
     double balance = sc.nextDouble();
+    sc.nextLine(); // Clear newline
     System.out.print("Enter password: ");
     String password = sc.next();
 
@@ -44,17 +48,8 @@ public class BankingApp {
 
     Account newAccount = new Account(name, accNo, balance, password);
     accounts.add(newAccount);
-
-    try {
-      BufferedWriter bw = new BufferedWriter(new FileWriter("accounts.txt", true));
-      bw.write(newAccount.toCSV());
-      bw.newLine();
-      bw.close();
-      System.out.println("Account saved to file.");
-    } catch (IOException e) {
-      System.out.println("Error writing to file: " + e.getMessage());
-    }
-
+    saveAllAccounts(accounts); // Centralized file save
+    System.out.println("Account saved to file.");
     System.out.println("Account created successfully!\n");
   }
 
@@ -107,7 +102,13 @@ public class BankingApp {
 
   public static Account login(ArrayList<Account> accounts, Scanner sc) {
     System.out.print("Enter account number: ");
+    if (!sc.hasNextInt()) {
+      System.out.println("Invalid input. Please enter a valid account number.");
+      sc.next(); // Clear invalid input
+      return null;
+    }
     int accNo = sc.nextInt();
+    sc.nextLine(); // Clear newline
     Account acc = findAccountByNumber(accounts, accNo);
 
     if (acc != null) {
@@ -158,7 +159,11 @@ public class BankingApp {
         System.out.println("2. Login");
         System.out.println("3. Exit");
         System.out.print("Choose an option: ");
-
+        if (!sc.hasNextInt()) {
+          System.out.println("Invalid input. Please enter a number.");
+          sc.next(); // Clear invalid input
+          continue;
+        }
         int choice = sc.nextInt();
         sc.nextLine(); // Clear newline
 
@@ -180,12 +185,11 @@ public class BankingApp {
 
       } else {
         System.out.println("\n--- Logged in as: " + loggedInAccount.getName() + " ---");
-        System.out.println("1. View My Details");
+        System.out.println("1. View Account Summary");
         System.out.println("2. Deposit Money");
         System.out.println("3. Withdraw Money");
-        System.out.println("4. Check Balance");
-        System.out.println("5. Delete My Account");
-        System.out.println("6. Logout");
+        System.out.println("4. Delete My Account");
+        System.out.println("5. Logout");
 
         System.out.print("Choose an option: ");
         int choice = sc.nextInt();
@@ -198,18 +202,30 @@ public class BankingApp {
 
           case 2:
             System.out.print("Enter amount to deposit: ");
+            if (!sc.hasNextDouble()) {
+              System.out.println("Invalid amount. Please enter a numeric value.");
+              sc.next();
+              break;
+            }
             double depAmt = sc.nextDouble();
             sc.nextLine();
             if (depAmt <= 0) {
               System.out.println("Invalid amount. Must be greater than 0.");
-            } else if (loggedInAccount.deposit(depAmt)) {
-              saveAllAccounts(accounts);
-              System.out.println("Deposit successful.");
+            } else {
+              if (loggedInAccount.deposit(depAmt)) {
+                saveAllAccounts(accounts);
+                System.out.println("Deposit successful.");
+              }
             }
             break;
 
           case 3:
             System.out.print("Enter amount to withdraw: ");
+            if (!sc.hasNextDouble()) {
+              System.out.println("Invalid amount. Please enter a numeric value.");
+              sc.next();
+              break;
+            }
             double wdAmt = sc.nextDouble();
             sc.nextLine();
             if (wdAmt <= 0) {
@@ -221,10 +237,6 @@ public class BankingApp {
             break;
 
           case 4:
-            System.out.println("Your current balance is: $" + loggedInAccount.getBalance());
-            break;
-
-          case 5:
             // Confirm password
             if (verifyPassword(loggedInAccount, sc)) {
               System.out.print("Are you sure you want to delete your account? (yes/no): ");
@@ -240,7 +252,7 @@ public class BankingApp {
             }
             break;
 
-          case 6:
+          case 5:
             logout();
             loggedInAccount = null;
             break;
