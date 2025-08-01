@@ -7,6 +7,16 @@ public class Account {
   private String password;
 
   public Account(String name, int accNo, double balance, String password) {
+    if (name == null || name.trim().isEmpty()) {
+      throw new IllegalArgumentException("Name cannot be empty");
+    }
+    if (balance < 0) {
+      throw new IllegalArgumentException("Balance cannot be negative");
+    }
+    if (password == null || password.trim().isEmpty()) {
+      throw new IllegalArgumentException("Password cannot be null or empty");
+    }
+
     this.name = name;
     this.accNo = accNo;
     this.balance = balance;

@@ -17,6 +17,18 @@ public class BankingApp {
     return null;
   }
 
+  public static Account promptAndFindAccount(ArrayList<Account> accounts, Scanner sc) {
+    System.out.print("Enter account number: ");
+    int accNo = sc.nextInt();
+    sc.nextLine(); // consume newline
+
+    Account acc = findAccountByNumber(accounts, accNo);
+    if (acc == null) {
+      System.out.println("Account not found.");
+    }
+    return acc;
+  }
+
   public static void createAccount(ArrayList<Account> accounts, Scanner sc) {
     System.out.print("Enter account holder's name: ");
     sc.nextLine(); // to consume leftover newline
@@ -96,10 +108,7 @@ public class BankingApp {
   }
 
   public static void depositToAccount(ArrayList<Account> accounts, Scanner sc) {
-    System.out.print("Enter account number: ");
-    int accNo = sc.nextInt();
-    Account acc = findAccountByNumber(accounts, accNo);
-
+    Account acc = promptAndFindAccount(accounts, sc);
     if (acc != null) {
       if (verifyPassword(acc, sc)) {
         System.out.print("Enter the amount to deposit: ");
@@ -115,10 +124,7 @@ public class BankingApp {
   }
 
   public static void withdrawFromAccount(ArrayList<Account> accounts, Scanner sc) {
-    System.out.print("Enter account number: ");
-    int accNo = sc.nextInt();
-    Account acc = findAccountByNumber(accounts, accNo);
-
+    Account acc = promptAndFindAccount(accounts, sc);
     if (acc != null) {
       if (verifyPassword(acc, sc)) {
         System.out.print("Enter the amount to withdraw: ");
@@ -134,10 +140,7 @@ public class BankingApp {
   }
 
   public static void deleteAccount(ArrayList<Account> accounts, Scanner sc) {
-    System.out.print("Enter account number to delete: ");
-    int delAccNo = sc.nextInt();
-    Account acc = findAccountByNumber(accounts, delAccNo);
-
+    Account acc = promptAndFindAccount(accounts, sc);
     if (acc != null) {
       if (verifyPassword(acc, sc)) {
         accounts.remove(acc);
