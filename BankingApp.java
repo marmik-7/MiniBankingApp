@@ -15,6 +15,52 @@ public class BankingApp {
     return null;
   }
 
+  public static void createAccount(ArrayList<Account> accounts, Scanner sc) {
+    System.out.print("Enter account holder's name: ");
+    sc.nextLine(); // to consume leftover newline
+    String name = sc.nextLine();
+    System.out.print("Enter account number: ");
+    int accNo = sc.nextInt();
+    System.out.print("Enter initial balance: ");
+    double balance = sc.nextDouble();
+    System.out.print("Enter password: ");
+    String password = sc.next();
+
+    if (findAccountByNumber(accounts, accNo) != null) {
+      System.out.println("Account number already exists. Please use a different number.\n");
+      return;
+    }
+
+    Account newAccount = new Account(name, accNo, balance, password);
+    accounts.add(newAccount);
+
+    try {
+      BufferedWriter bw = new BufferedWriter(new FileWriter("accounts.txt", true));
+      bw.write(newAccount.toCSV());
+      bw.newLine();
+      bw.close();
+      System.out.println("Account saved to file.");
+    } catch (IOException e) {
+      System.out.println("Error writing to file: " + e.getMessage());
+    }
+
+    System.out.println("Account created successfully!\n");
+  }
+
+  public static void viewAllAccounts(ArrayList<Account> accounts) {
+    if (accounts.isEmpty()) {
+      System.out.println("No accounts available.\n");
+    } else {
+      int count = 1;
+      for (Account acc : accounts) {
+        System.out.println("Account " + count + ":");
+        acc.display();
+        System.out.println("-----------------------");
+        count++;
+      }
+    }
+  }
+
   public static void saveAllAccounts(ArrayList<Account> accounts) {
     try {
       BufferedWriter bw = new BufferedWriter(new FileWriter("accounts.txt"));
@@ -45,6 +91,74 @@ public class BankingApp {
 
     System.out.println("Too many failed attempts.");
     return false; // ❌ after 3 tries
+  }
+
+  public static void depositToAccount(ArrayList<Account> accounts, Scanner sc) {
+    System.out.print("Enter account number: ");
+    int accNo = sc.nextInt();
+    Account acc = findAccountByNumber(accounts, accNo);
+
+    if (acc != null) {
+      if (verifyPassword(acc, sc)) {
+        System.out.print("Enter the amount to deposit: ");
+        double amount = sc.nextDouble();
+        if (acc.deposit(amount)) {
+          saveAllAccounts(accounts);
+          System.out.println("Deposit successful.");
+        }
+      }
+    } else {
+      System.out.println("Account not found.");
+    }
+  }
+
+  public static void withdrawFromAccount(ArrayList<Account> accounts, Scanner sc) {
+    System.out.print("Enter account number: ");
+    int accNo = sc.nextInt();
+    Account acc = findAccountByNumber(accounts, accNo);
+
+    if (acc != null) {
+      if (verifyPassword(acc, sc)) {
+        System.out.print("Enter the amount to withdraw: ");
+        double amount = sc.nextDouble();
+        if (acc.withdraw(amount)) {
+          saveAllAccounts(accounts);
+          System.out.println("Withdrawal successful.");
+        }
+      }
+    } else {
+      System.out.println("Account not found.");
+    }
+  }
+
+  public static void deleteAccount(ArrayList<Account> accounts, Scanner sc) {
+    System.out.print("Enter account number to delete: ");
+    int delAccNo = sc.nextInt();
+    Account acc = findAccountByNumber(accounts, delAccNo);
+
+    if (acc != null) {
+      if (verifyPassword(acc, sc)) {
+        accounts.remove(acc);
+        saveAllAccounts(accounts);
+        System.out.println("Account deleted successfully.");
+      }
+    } else {
+      System.out.println("Account not found.");
+    }
+  }
+
+  public static void checkAccountBalance(ArrayList<Account> accounts, Scanner sc) {
+    System.out.print("Enter account number to check balance: ");
+    int checkBal = sc.nextInt();
+    Account acc = findAccountByNumber(accounts, checkBal);
+
+    if (acc != null) {
+      if (verifyPassword(acc, sc)) {
+        System.out.println("Your current balance is: $" + acc.getBalance());
+      }
+    } else {
+      System.out.println("Account not found.");
+    }
   }
 
   public static void main(String[] args) {
@@ -87,114 +201,27 @@ public class BankingApp {
 
       switch (choice) {
         case 1:
-          System.out.print("Enter account holder's name: ");
-          String name = sc.nextLine();
-          System.out.print("Enter account number: ");
-          int accNo = sc.nextInt();
-          System.out.print("Enter initial balance: ");
-          double balance = sc.nextDouble();
-          System.out.println("Enter password: ");
-          String password = sc.next();
-
-          if (findAccountByNumber(accounts, accNo) != null) {
-            System.out.println("Account number already exists. Please use a different number.\n");
-          } else {
-            Account newAccount = new Account(name, accNo, balance, password);
-            accounts.add(newAccount);
-            try {
-              BufferedWriter bw = new BufferedWriter(new FileWriter("accounts.txt", true));
-              bw.write(newAccount.toCSV());
-              bw.newLine();
-              bw.close();
-              System.out.println("Account saved to file.");
-            } catch (IOException e) {
-              System.out.println("Error writing to file: " + e.getMessage());
-            }
-            System.out.println("Account created successfully!\n");
-            break;
-          }
+          createAccount(accounts, sc);
           break;
 
         case 2:
-          if (accounts.isEmpty()) {
-            System.out.println("No accounts available.\n");
-          } else {
-            int count = 1;
-            for (Account acc : accounts) {
-              System.out.println("Account " + count + ":");
-              acc.display();
-              System.out.println("-----------------------");
-              count++;
-            }
-          }
+          viewAllAccounts(accounts);
           break;
 
         case 3:
-          System.out.print("Enter account number: ");
-          int depositAcc = sc.nextInt();
-          Account acc = findAccountByNumber(accounts, depositAcc);
-
-          if (acc != null) {
-            if (verifyPassword(acc, sc)) {
-              System.out.print("Enter the amount to deposit: ");
-              double amount = sc.nextDouble();
-              if (acc.deposit(amount)) {
-                saveAllAccounts(accounts);
-                System.out.println("Deposit successful.");
-              }
-            }
-          } else {
-            System.out.println("Account not found.");
-          }
+          depositToAccount(accounts, sc);
           break;
 
         case 4:
-          System.out.print("Enter account number: ");
-          int withdrawAcc = sc.nextInt();
-          acc = findAccountByNumber(accounts, withdrawAcc);
-
-          if (acc != null) {
-            if (verifyPassword(acc, sc)) {
-              System.out.print("Enter the amount to withdraw: ");
-              double amount = sc.nextDouble();
-              if (acc.withdraw(amount)) {
-                saveAllAccounts(accounts);
-                System.out.println("Withdrawal successful.");
-              }
-            }
-          } else {
-            System.out.println("Account not found.");
-          }
+          withdrawFromAccount(accounts, sc);
           break;
 
         case 5:
-          System.out.print("Enter account number to delete: ");
-          int delAccNo = sc.nextInt();
-          acc = findAccountByNumber(accounts, delAccNo);
-
-          if (acc != null) {
-            if (verifyPassword(acc, sc)) {
-              accounts.remove(acc);
-              saveAllAccounts(accounts);
-              System.out.println("Account deleted successfully.");
-            }
-          } else {
-            System.out.println("Account not found.");
-          }
+          deleteAccount(accounts, sc);
           break;
 
         case 6:
-          System.out.print("Enter account number to check balance: ");
-          int checkBal = sc.nextInt();
-          acc = findAccountByNumber(accounts, checkBal);
-
-          if (acc != null) {
-            if (verifyPassword(acc, sc)) {
-              System.out.println("Your current balance is: $" + acc.getBalance());
-            }
-          } else {
-            System.out.println("Account not found.");
-          }
+          checkAccountBalance(accounts, sc);
           break;
 
         case 7:
