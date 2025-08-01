@@ -9,6 +9,8 @@ import java.util.ArrayList;
 
 public class BankingApp {
 
+  static Account loggedInAccount = null;
+
   public static Account findAccountByNumber(ArrayList<Account> accounts, int accNo) {
     for (Account acc : accounts) {
       if (acc.getAccNo() == accNo)
@@ -21,12 +23,7 @@ public class BankingApp {
     System.out.print("Enter account number: ");
     int accNo = sc.nextInt();
     sc.nextLine(); // consume newline
-
-    Account acc = findAccountByNumber(accounts, accNo);
-    if (acc == null) {
-      System.out.println("Account not found.");
-    }
-    return acc;
+    return findAccountByNumber(accounts, accNo);
   }
 
   public static void createAccount(ArrayList<Account> accounts, Scanner sc) {
@@ -89,14 +86,15 @@ public class BankingApp {
   }
 
   public static boolean verifyPassword(Account acc, Scanner sc) {
+    final int MAX_PASSWORD_ATTEMPTS = 3;
     int attempts = 0;
 
-    while (attempts < 3) {
+    while (attempts < MAX_PASSWORD_ATTEMPTS) {
       System.out.print("Enter password: ");
       String inputPass = sc.next();
 
       if (acc.checkPassword(inputPass)) {
-        return true; // ✅ correct password
+        return true;
       } else {
         attempts++;
         System.out.println("Wrong Password. Try again.");
@@ -104,66 +102,28 @@ public class BankingApp {
     }
 
     System.out.println("Too many failed attempts.");
-    return false; // ❌ after 3 tries
+    return false;
   }
 
-  public static void depositToAccount(ArrayList<Account> accounts, Scanner sc) {
-    Account acc = promptAndFindAccount(accounts, sc);
+  public static Account login(ArrayList<Account> accounts, Scanner sc) {
+    System.out.print("Enter account number: ");
+    int accNo = sc.nextInt();
+    Account acc = findAccountByNumber(accounts, accNo);
+
     if (acc != null) {
       if (verifyPassword(acc, sc)) {
-        System.out.print("Enter the amount to deposit: ");
-        double amount = sc.nextDouble();
-        if (acc.deposit(amount)) {
-          saveAllAccounts(accounts);
-          System.out.println("Deposit successful.");
-        }
+        System.out.println("Login successful. Welcome, " + acc.getName() + "!");
+        return acc;
       }
     } else {
       System.out.println("Account not found.");
     }
+
+    return null;
   }
 
-  public static void withdrawFromAccount(ArrayList<Account> accounts, Scanner sc) {
-    Account acc = promptAndFindAccount(accounts, sc);
-    if (acc != null) {
-      if (verifyPassword(acc, sc)) {
-        System.out.print("Enter the amount to withdraw: ");
-        double amount = sc.nextDouble();
-        if (acc.withdraw(amount)) {
-          saveAllAccounts(accounts);
-          System.out.println("Withdrawal successful.");
-        }
-      }
-    } else {
-      System.out.println("Account not found.");
-    }
-  }
-
-  public static void deleteAccount(ArrayList<Account> accounts, Scanner sc) {
-    Account acc = promptAndFindAccount(accounts, sc);
-    if (acc != null) {
-      if (verifyPassword(acc, sc)) {
-        accounts.remove(acc);
-        saveAllAccounts(accounts);
-        System.out.println("Account deleted successfully.");
-      }
-    } else {
-      System.out.println("Account not found.");
-    }
-  }
-
-  public static void checkAccountBalance(ArrayList<Account> accounts, Scanner sc) {
-    System.out.print("Enter account number to check balance: ");
-    int checkBal = sc.nextInt();
-    Account acc = findAccountByNumber(accounts, checkBal);
-
-    if (acc != null) {
-      if (verifyPassword(acc, sc)) {
-        System.out.println("Your current balance is: $" + acc.getBalance());
-      }
-    } else {
-      System.out.println("Account not found.");
-    }
+  public static void logout() {
+    System.out.println("You have been logged out.\n");
   }
 
   public static void main(String[] args) {
@@ -192,52 +152,102 @@ public class BankingApp {
     }
 
     while (true) {
-      System.out.println("Welcome to the Banking App!");
-      System.out.println("1. Create Account");
-      System.out.println("2. Display Accounts");
-      System.out.println("3. Deposit Money");
-      System.out.println("4. Withdraw Money");
-      System.out.println("5. Delete Account");
-      System.out.println("6. Check Balance");
-      System.out.println("7. Exit");
-      System.out.print("Choose an option: ");
-      int choice = sc.nextInt();
-      sc.nextLine();
+      if (loggedInAccount == null) {
+        System.out.println("\n--- Welcome to the Banking App ---");
+        System.out.println("1. Create Account");
+        System.out.println("2. Login");
+        System.out.println("3. Exit");
+        System.out.print("Choose an option: ");
 
-      switch (choice) {
-        case 1:
-          createAccount(accounts, sc);
-          break;
+        int choice = sc.nextInt();
+        sc.nextLine(); // Clear newline
 
-        case 2:
-          viewAllAccounts(accounts);
-          break;
+        switch (choice) {
+          case 1:
+            createAccount(accounts, sc);
+            break;
+          case 2:
+            loggedInAccount = login(accounts, sc);
+            break;
+          case 3:
+            System.out.println("Exiting the Banking App. Goodbye!");
+            sc.close();
+            System.exit(0);
+            break;
+          default:
+            System.out.println("Invalid choice. Please try again.");
+        }
 
-        case 3:
-          depositToAccount(accounts, sc);
-          break;
+      } else {
+        System.out.println("\n--- Logged in as: " + loggedInAccount.getName() + " ---");
+        System.out.println("1. View My Details");
+        System.out.println("2. Deposit Money");
+        System.out.println("3. Withdraw Money");
+        System.out.println("4. Check Balance");
+        System.out.println("5. Delete My Account");
+        System.out.println("6. Logout");
 
-        case 4:
-          withdrawFromAccount(accounts, sc);
-          break;
+        System.out.print("Choose an option: ");
+        int choice = sc.nextInt();
+        sc.nextLine(); // Clear newline
 
-        case 5:
-          deleteAccount(accounts, sc);
-          break;
+        switch (choice) {
+          case 1:
+            loggedInAccount.display();
+            break;
 
-        case 6:
-          checkAccountBalance(accounts, sc);
-          break;
+          case 2:
+            System.out.print("Enter amount to deposit: ");
+            double depAmt = sc.nextDouble();
+            sc.nextLine();
+            if (depAmt <= 0) {
+              System.out.println("Invalid amount. Must be greater than 0.");
+            } else if (loggedInAccount.deposit(depAmt)) {
+              saveAllAccounts(accounts);
+              System.out.println("Deposit successful.");
+            }
+            break;
 
-        case 7:
-          System.out.println("Exiting the Banking App. Goodbye!");
-          sc.close();
-          System.exit(0);
-          break;
+          case 3:
+            System.out.print("Enter amount to withdraw: ");
+            double wdAmt = sc.nextDouble();
+            sc.nextLine();
+            if (wdAmt <= 0) {
+              System.out.println("Invalid amount. Must be greater than 0.");
+            } else if (loggedInAccount.withdraw(wdAmt)) {
+              saveAllAccounts(accounts);
+              System.out.println("Withdrawal successful.");
+            }
+            break;
 
-        default:
-          System.out.println("Invalid choice. Please try again.\n");
-          break;
+          case 4:
+            System.out.println("Your current balance is: $" + loggedInAccount.getBalance());
+            break;
+
+          case 5:
+            // Confirm password
+            if (verifyPassword(loggedInAccount, sc)) {
+              System.out.print("Are you sure you want to delete your account? (yes/no): ");
+              String confirm = sc.nextLine();
+              if (confirm.equalsIgnoreCase("yes")) {
+                accounts.remove(loggedInAccount);
+                saveAllAccounts(accounts);
+                System.out.println("Your account has been deleted.");
+                loggedInAccount = null;
+              } else {
+                System.out.println("Account deletion cancelled.");
+              }
+            }
+            break;
+
+          case 6:
+            logout();
+            loggedInAccount = null;
+            break;
+
+          default:
+            System.out.println("Invalid choice. Please try again.");
+        }
       }
     }
   }
