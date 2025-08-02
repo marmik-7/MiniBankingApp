@@ -6,13 +6,13 @@ public class Transaction {
   private String description;
 
   public Transaction(String type, double amount, String description) {
-    if (amount <= 0) {
-      throw new IllegalArgumentException("Amount must be positive.");
-    }
+    // Validation now allows for positive or negative amounts, which is correct for
+    // transactions.
+    // For a withdrawal, the amount should be negative. For a deposit, it should be
+    // positive.
     if (description == null || description.trim().isEmpty()) {
       throw new IllegalArgumentException("Description cannot be empty.");
     }
-
     this.type = type;
     this.amount = amount;
     this.description = description;
@@ -30,9 +30,11 @@ public class Transaction {
     return description;
   }
 
-  // toString method for displaying transactions
   @Override
   public String toString() {
-    return String.format("%s: $%.2f - %s", type, amount, description);
+    // Use Math.abs() to format the amount nicely for withdrawals,
+    // avoiding a confusing double negative (e.g., "Withdrawal: $-50.00").
+    String formattedAmount = String.format("$%.2f", Math.abs(amount));
+    return String.format("%s: %s - %s", type, formattedAmount, description);
   }
 }

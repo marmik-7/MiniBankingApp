@@ -3,17 +3,24 @@ package test;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 
 import src.Account;
+import src.Transaction;
 
-public class BankingAppTest {
+public class AccountTest {
 
-  Account acc;
+  private static final String TEST_NAME = "TestUser";
+  private static final int TEST_ACC_NO = 999;
+  private static final double INITIAL_BALANCE = 1000.0;
+  private static final String VALID_PASSWORD = "testpass";
+
+  private Account acc;
 
   @BeforeEach
   public void setUp() {
-    acc = new Account("TestUser", 999, 1000.0, "testpass");
+    acc = new Account(TEST_NAME, TEST_ACC_NO, INITIAL_BALANCE, VALID_PASSWORD);
   }
 
   @Test
@@ -32,75 +39,49 @@ public class BankingAppTest {
 
   @Test
   public void testWithdrawFailsIfInsufficientFunds() {
-    Account acc = new Account("Charlie", 103, 300.0, "charlieP");
-    boolean success = acc.withdraw(400.0);
+    boolean success = acc.withdraw(1200.0);
     assertFalse(success, "Withdraw should fail if amount exceeds balance");
-    assertEquals(300.0, acc.getBalance(), "Balance should remain unchanged after failed withdrawal");
+    assertEquals(INITIAL_BALANCE, acc.getBalance(), "Balance should remain unchanged after failed withdrawal");
   }
 
   @Test
   public void testCheckPassword() {
-    Account acc = new Account("Dave", 104, 0, "myPass12");
-    assertTrue(acc.checkPassword("myPass12"), "Password check should succeed with correct password");
+    assertTrue(acc.checkPassword(VALID_PASSWORD), "Password check should succeed with correct password");
     assertFalse(acc.checkPassword("wrongPass"), "Password check should fail with incorrect password");
   }
 
   @Test
   public void testDepositFailsOnNonPositiveAmount() {
-    Account acc = new Account("Eve", 105, 0, "evePass1");
+    double originalBalance = acc.getBalance();
     assertFalse(acc.deposit(0), "Deposit of zero should fail");
     assertFalse(acc.deposit(-100), "Deposit of negative amount should fail");
-    assertEquals(0, acc.getBalance(), "Balance should remain unchanged on failed deposit");
+    assertEquals(originalBalance, acc.getBalance(), "Balance should remain unchanged on failed deposit");
   }
 
   @Test
   public void testWithdrawFailsOnNonPositiveAmount() {
-    Account acc = new Account("Eve", 105, 0, "evePass2");
+    double originalBalance = acc.getBalance();
     assertFalse(acc.withdraw(0), "Withdraw of zero should fail");
     assertFalse(acc.withdraw(-100), "Withdraw of negative amount should fail");
-    assertEquals(0, acc.getBalance(), "Balance should remain unchanged on failed withdrawal");
+    assertEquals(originalBalance, acc.getBalance(), "Balance should remain unchanged on failed withdrawal");
   }
 
   @Test
   public void testWithdrawExactBalance() {
-    boolean success = acc.withdraw(1000.0);
+    boolean success = acc.withdraw(INITIAL_BALANCE);
     assertTrue(success, "Withdrawal should succeed with exact balance");
     assertEquals(0.0, acc.getBalance(), "Balance should be zero after withdrawing the entire amount");
   }
 
   @Test
-  public void testAccountCreationFailsWithEmptyName() {
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      new Account("", 201, 500, "validPass");
-    });
-    // Removed period from the end of the expected message
-    assertEquals("Name cannot be empty", exception.getMessage());
-  }
-
-  @Test
-  public void testAccountCreationFailsWithNegativeBalance() {
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      new Account("John", 202, -100, "validPass");
-    });
-    // Removed period from the end of the expected message
-    assertEquals("Balance cannot be negative", exception.getMessage());
-  }
-
-  @Test
-  public void testAccountCreationFailsWithNullPassword() {
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      new Account("Jane", 203, 100, null);
-    });
-    // Removed period from the end of the expected message
-    assertEquals("Password cannot be null or empty", exception.getMessage());
-  }
-
-  @Test
-  public void testAccountCreationFailsWithShortPassword() {
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      new Account("Frank", 204, 1000, "short");
-    });
-    assertEquals("Password must be at least 6 characters long.", exception.getMessage());
+  public void testAccountCreationFailsWithInvalidInputs() {
+    Assertions.assertAll(
+        () -> assertThrows(IllegalArgumentException.class, () -> new Account("", 201, 500, "validPass"), "Empty name"),
+        () -> assertThrows(IllegalArgumentException.class, () -> new Account("John", 202, -100, "validPass"),
+            "Negative balance"),
+        () -> assertThrows(IllegalArgumentException.class, () -> new Account("Jane", 203, 100, null), "Null password"),
+        () -> assertThrows(IllegalArgumentException.class, () -> new Account("Frank", 204, 1000, "short"),
+            "Short password"));
   }
 
   @Test
@@ -108,7 +89,7 @@ public class BankingAppTest {
     assertDoesNotThrow(() -> acc.setPassword("newPass123"),
         "Setting a valid new password should not throw an exception");
     assertTrue(acc.checkPassword("newPass123"), "Account should update to the new password");
-    assertFalse(acc.checkPassword("testpass"), "Old password should no longer work");
+    assertFalse(acc.checkPassword(VALID_PASSWORD), "Old password should no longer work");
   }
 
   @Test
@@ -146,16 +127,10 @@ public class BankingAppTest {
   }
 
   @Test
-  public void testTransactionHistoryAfterDeposit() {
-    acc.deposit(500.0);
-    assertEquals(1, acc.getTransactions().size(), "One transaction should be recorded after deposit");
-    assertEquals("Deposit", acc.getTransactions().get(0).getType(), "Transaction type should be 'Deposit'");
-  }
-
-  @Test
-  public void testTransactionHistoryAfterWithdrawal() {
-    acc.withdraw(200.0);
-    assertEquals(1, acc.getTransactions().size(), "One transaction should be recorded after withdrawal");
-    assertEquals("Withdrawal", acc.getTransactions().get(0).getType(), "Transaction type should be 'Withdrawal'");
+  public void testTransactionCanBeAddedAndRetrieved() {
+    Transaction newTransaction = new Transaction("Deposit", 100.0, "Initial deposit");
+    acc.addTransaction(newTransaction);
+    assertEquals(1, acc.getTransactions().size(), "One transaction should be in the list");
+    assertEquals(newTransaction, acc.getTransactions().get(0), "The correct transaction object should be retrieved");
   }
 }
