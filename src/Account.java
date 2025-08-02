@@ -16,6 +16,9 @@ public class Account {
     if (password == null || password.trim().isEmpty()) {
       throw new IllegalArgumentException("Password cannot be null or empty");
     }
+    if (password.length() < 6) { // Consistent with BankingApp validation
+      throw new IllegalArgumentException("Password must be at least 6 characters long.");
+    }
 
     this.name = name;
     this.accNo = accNo;
@@ -71,6 +74,19 @@ public class Account {
 
   public boolean checkPassword(String input) {
     return this.password.equals(input);
+  }
+
+  // New method to set the password
+  public void setPassword(String newPassword) {
+    if (newPassword == null || newPassword.trim().isEmpty()) {
+      throw new IllegalArgumentException("New password cannot be empty.");
+    }
+    if (newPassword.length() < 6) {
+      throw new IllegalArgumentException("New password must be at least 6 characters long.");
+    }
+    // Important: this check is for setting *any* password.
+    // The check for "new password cannot be same as old" will be in BankingApp.
+    this.password = newPassword;
   }
 
   public String toCSV() {
