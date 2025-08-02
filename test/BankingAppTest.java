@@ -62,6 +62,13 @@ public class BankingAppTest {
   }
 
   @Test
+  public void testWithdrawExactBalance() {
+    boolean success = acc.withdraw(1000.0);
+    assertTrue(success, "Withdrawal should succeed with exact balance");
+    assertEquals(0.0, acc.getBalance(), "Balance should be zero after withdrawing the entire amount");
+  }
+
+  @Test
   public void testAccountCreationFailsWithEmptyName() {
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
       new Account("", 201, 500, "validPass");
@@ -136,5 +143,19 @@ public class BankingAppTest {
     Account csvAcc = new Account("CSVUser", 111222, 500.75, "csvPass");
     String expectedCSV = "CSVUser,111222,500.75,csvPass";
     assertEquals(expectedCSV, csvAcc.toCSV(), "toCSV should return correctly formatted string");
+  }
+
+  @Test
+  public void testTransactionHistoryAfterDeposit() {
+    acc.deposit(500.0);
+    assertEquals(1, acc.getTransactions().size(), "One transaction should be recorded after deposit");
+    assertEquals("Deposit", acc.getTransactions().get(0).getType(), "Transaction type should be 'Deposit'");
+  }
+
+  @Test
+  public void testTransactionHistoryAfterWithdrawal() {
+    acc.withdraw(200.0);
+    assertEquals(1, acc.getTransactions().size(), "One transaction should be recorded after withdrawal");
+    assertEquals("Withdrawal", acc.getTransactions().get(0).getType(), "Transaction type should be 'Withdrawal'");
   }
 }

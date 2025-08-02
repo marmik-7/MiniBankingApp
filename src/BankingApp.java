@@ -3,6 +3,7 @@ package src;
 import java.util.Scanner;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -116,6 +117,7 @@ public class BankingApp {
       Account newAccount = new Account(name, accNo, balance, password);
       accounts.add(newAccount);
       saveAllAccounts(accounts);
+      saveAllTransactions(accounts);
       System.out.println("Account created successfully and saved to file!\n");
     } catch (IllegalArgumentException e) {
       // This catch block is mostly a fallback now because getValidatedPasswordInput
@@ -211,6 +213,117 @@ public class BankingApp {
     System.out.println("You have been logged out.\n");
   }
 
+  public static void transferFunds(Account loggedInAccount, ArrayList<Account> accounts, Scanner sc) {
+    // Step 1: Prompt for the recipient's account number
+    System.out.print("Enter recipient's account number (6 digits): ");
+    int recipientAccNo = sc.nextInt();
+
+    // Validate account number (6 digits)
+    if (String.valueOf(recipientAccNo).length() != 6) {
+      System.out.println("Invalid account number. It should be a 6-digit number.");
+      return;
+    }
+
+    // Step 2: Find the recipient account
+    Account recipientAccount = findAccountByNumber(accounts, recipientAccNo);
+    if (recipientAccount == null) {
+      System.out.println("Recipient account not found.");
+      return;
+    }
+
+    // Step 3: Prompt for the transfer amount
+    System.out.print("Enter amount to transfer: ");
+    double transferAmount = sc.nextDouble();
+
+    // Step 4: Validate the amount
+    if (transferAmount <= 0) {
+      System.out.println("Amount must be greater than 0.");
+      return;
+    }
+
+    if (loggedInAccount.getBalance() < transferAmount) {
+      System.out.println("Insufficient funds for transfer.");
+      return;
+    }
+
+    // Step 5: Perform the transaction
+    boolean withdrawalSuccess = loggedInAccount.withdraw(transferAmount);
+    if (!withdrawalSuccess) {
+      System.out.println("Withdrawal failed.");
+      return;
+    }
+
+    boolean depositSuccess = recipientAccount.deposit(transferAmount);
+    if (!depositSuccess) {
+      System.out.println("Deposit failed.");
+      return;
+    }
+
+    // Step 6: Log transactions
+    Transaction senderTransaction = new Transaction(
+        "Transfer",
+        -transferAmount,
+        "Transfer to account " + recipientAccNo);
+    loggedInAccount.addTransaction(senderTransaction);
+
+    Transaction recipientTransaction = new Transaction(
+        "Transfer",
+        transferAmount,
+        "Transfer from account " + loggedInAccount.getAccNo());
+    recipientAccount.addTransaction(recipientTransaction);
+
+    // Step 7: Save all changes
+    try {
+      saveAllAccounts(accounts);
+      saveAllTransactions(accounts);
+    } catch (Exception e) {
+      System.out.println("Error saving accounts or transactions: " + e.getMessage());
+    }
+
+    System.out.println("Transfer successful!");
+    System.out.printf("Transferred $%.2f from account %s to account %s.%n", transferAmount, loggedInAccount.getAccNo(),
+        recipientAccNo);
+  }
+
+  // New method to save all transactions to a file
+  // This method will be called after each transaction to keep a record
+  public static void saveAllTransactions(ArrayList<Account> accounts) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("transactions.txt"))) {
+      for (Account acc : accounts) {
+        for (Transaction t : acc.getTransactions()) {
+          // Format: accNo,type,amount,description (description should not contain commas
+          // or handle escaping)
+          writer.write(acc.getAccNo() + "," + t.getType() + "," + t.getAmount() + "," + t.getDescription());
+          writer.newLine();
+        }
+      }
+    } catch (IOException e) {
+      System.out.println("Error saving transactions: " + e.getMessage());
+    }
+  }
+
+  public static void loadTransactions(ArrayList<Account> accounts) {
+    try (BufferedReader reader = new BufferedReader(new FileReader("transactions.txt"))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        String[] parts = line.split(",", 4); // limit 4 to preserve commas in description if any
+        if (parts.length == 4) {
+          int accNo = Integer.parseInt(parts[0]);
+          String type = parts[1];
+          double amount = Double.parseDouble(parts[2]);
+          String description = parts[3];
+
+          Account acc = findAccountByNumber(accounts, accNo);
+          if (acc != null) {
+            acc.addTransaction(new Transaction(type, amount, description));
+          }
+        }
+      }
+    } catch (IOException e) {
+      System.out.println("No transactions file found or error reading transactions.");
+    }
+  }
+
   // New method for changing password
   public static void changePassword(ArrayList<Account> accounts, Scanner sc) {
     System.out.println("\n--- Change Password ---");
@@ -247,7 +360,7 @@ public class BankingApp {
     // exceptions
     try {
       loggedInAccount.setPassword(newPassword);
-      saveAllAccounts(accounts); // Save changes to file
+      saveAllAccounts(accounts);
       System.out.println("Password changed successfully!");
     } catch (IllegalArgumentException e) {
       // This catch block would ideally not be hit if getValidatedPasswordInput
@@ -326,9 +439,11 @@ public class BankingApp {
         System.out.println("1. View Account Summary");
         System.out.println("2. Deposit Money");
         System.out.println("3. Withdraw Money");
-        System.out.println("4. Change Password");
-        System.out.println("5. Delete My Account");
-        System.out.println("6. Logout");
+        System.out.println("4. Transfer Funds");
+        System.out.println("5. View Transaction History");
+        System.out.println("6. Change Password");
+        System.out.println("7. Delete My Account");
+        System.out.println("8. Logout");
 
         System.out.print("Choose an option: ");
         if (!sc.hasNextInt()) {
@@ -361,7 +476,10 @@ public class BankingApp {
               System.out.println("Invalid amount. Must be greater than 0.");
             } else {
               if (loggedInAccount.deposit(depAmt)) {
+                loggedInAccount.addTransaction(
+                    new Transaction("Deposit", depAmt, "Deposited to account " + loggedInAccount.getAccNo()));
                 saveAllAccounts(accounts);
+                saveAllTransactions(accounts);
                 System.out.println("Deposit successful.");
               }
             }
@@ -382,18 +500,39 @@ public class BankingApp {
             if (wdAmt <= 0) {
               System.out.println("Invalid amount. Must be greater than 0.");
             } else if (loggedInAccount.withdraw(wdAmt)) {
+              loggedInAccount.addTransaction(
+                  new Transaction("Withdrawal", wdAmt, "Withdrew from account " + loggedInAccount.getAccNo()));
               saveAllAccounts(accounts);
+              saveAllTransactions(accounts);
               System.out.println("Withdrawal successful.");
             }
             pressEnterToContinue(sc);
             break;
 
-          case 4: // Handle Change Password
+          case 4: // Transfer Funds
+            transferFunds(loggedInAccount, accounts, sc);
+            break;
+
+          case 5:
+            ArrayList<Transaction> history = loggedInAccount.getTransactions();
+            if (history.isEmpty()) {
+              System.out.println("No transaction history available.");
+            } else {
+              System.out.println("--- Transaction History ---");
+              for (Transaction t : history) {
+                System.out.println(t);
+              }
+              System.out.println("---------------------------");
+            }
+            pressEnterToContinue(sc);
+            break;
+
+          case 6: // Handle Change Password
             changePassword(accounts, sc);
             pressEnterToContinue(sc);
             break;
 
-          case 5:
+          case 7:
             System.out.println("To delete your account, please verify your password.");
             if (verifyPassword(loggedInAccount, sc)) {
               System.out.print("Are you sure you want to delete your account? (yes/no): ");
@@ -401,6 +540,7 @@ public class BankingApp {
               if (confirm.equalsIgnoreCase("yes")) {
                 accounts.remove(loggedInAccount);
                 saveAllAccounts(accounts);
+                saveAllTransactions(accounts);
                 System.out.println("Your account has been deleted.");
                 loggedInAccount = null; // Log out the user
               } else {
@@ -412,7 +552,8 @@ public class BankingApp {
             pressEnterToContinue(sc);
             break;
 
-          case 6:
+          case 8: // Logout
+            System.out.println("Logging out...");
             logout();
             loggedInAccount = null;
             pressEnterToContinue(sc); // Prompt after logout

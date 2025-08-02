@@ -1,10 +1,15 @@
 package src;
 
+import java.util.ArrayList;
+
 public class Account {
   private String name;
   private int accNo;
   private double balance;
   private String password;
+
+  // New field for transaction history
+  private ArrayList<Transaction> transactions;
 
   public Account(String name, int accNo, double balance, String password) {
     if (name == null || name.trim().isEmpty()) {
@@ -24,6 +29,16 @@ public class Account {
     this.accNo = accNo;
     this.balance = balance;
     this.password = password;
+    this.transactions = new ArrayList<>(); // Initialize transactions list
+  }
+
+  // New methods:
+  public void addTransaction(Transaction transaction) {
+    transactions.add(transaction);
+  }
+
+  public ArrayList<Transaction> getTransactions() {
+    return transactions;
   }
 
   public void display() {
@@ -41,6 +56,9 @@ public class Account {
     balance += amount;
     System.out.println("Deposited $" + amount);
     System.out.println("New Balance: $" + balance);
+
+    // Add transaction
+    addTransaction(new Transaction("Deposit", amount, "Deposit to account"));
     return true;
   }
 
@@ -53,6 +71,9 @@ public class Account {
       balance -= amount;
       System.out.println("Withdrew $" + amount);
       System.out.println("New Balance: $" + balance);
+
+      // Add transaction
+      addTransaction(new Transaction("Withdrawal", amount, "Withdrawal from account"));
       return true;
     } else {
       System.out.println("Insufficient funds.");
