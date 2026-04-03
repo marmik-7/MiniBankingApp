@@ -17,11 +17,14 @@ A simple command-line banking application built with Java that allows users to c
 ```
 src/
   Account.java          - Account model with deposit/withdraw/transfer logic
-  BankingApp.java       - Main application with user interface and business logic
+  Bank.java             - Bank data model and persistence (refactored)
+  BankingApp.java       - Main application orchestrator
+  Cli.java              - CLI/UI helper methods (refactored)
   Transaction.java      - Transaction record model
 test/
   AccountTest.java      - Unit tests for Account class
-  BankingAppTest.java   - Integration tests for banking operations
+  BankTest.java         - Unit tests for Bank persistence (refactored)
+  TransactionTest.java  - Unit tests for Transaction class (refactored)
 lib/
   junit-platform-console-standalone-1.13.0-M3.jar  - JUnit testing framework
 accounts.txt           - Persistent accounts database (generated at runtime)
@@ -74,8 +77,6 @@ Execute all unit and integration tests:
 java -jar "lib/junit-platform-console-standalone-1.13.0-M3.jar" execute --class-path out --scan-class-path
 ```
 
-All tests should pass (23 tests on main branch).
-
 ## Error Handling
 
 The application validates all inputs and prevents:
@@ -88,7 +89,7 @@ The application validates all inputs and prevents:
 ## Contributing
 
 When contributing, ensure:
-1. All tests pass: `23/23` on main, `23/23` on major-refactor
+1. All tests (23/23) pass
 2. No new compiler errors
 3. Folder structure is preserved (`src/`, `test/`, `lib/`)
 4. Runtime files (`accounts.txt`, `transactions.txt`) remain at project root
