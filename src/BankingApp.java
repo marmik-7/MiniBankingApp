@@ -136,6 +136,16 @@ public class BankingApp {
 
   public static void transferFunds() {
     int recipientAccNo = Cli.getIntInput(sc, "Enter recipient's account number (6 digits): ");
+    if (String.valueOf(recipientAccNo).length() != 6) {
+      System.out.println("Invalid account number. It should be a 6-digit number.");
+      return;
+    }
+
+    if (recipientAccNo == loggedInAccount.getAccNo()) {
+      System.out.println("You cannot transfer funds to the same account.");
+      return;
+    }
+
     Account recipientAccount = bank.findAccountByNumber(recipientAccNo);
 
     if (recipientAccount == null) {
@@ -215,6 +225,7 @@ public class BankingApp {
       if (confirm.equalsIgnoreCase("yes")) {
         bank.removeAccount(loggedInAccount);
         bank.saveAllAccounts();
+        bank.saveAllTransactions();
         System.out.println("Your account has been deleted.");
         loggedInAccount = null;
       } else {
