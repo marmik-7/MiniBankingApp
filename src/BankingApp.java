@@ -216,11 +216,23 @@ public class BankingApp {
   public static void transferFunds(Account loggedInAccount, ArrayList<Account> accounts, Scanner sc) {
     // Step 1: Prompt for the recipient's account number
     System.out.print("Enter recipient's account number (6 digits): ");
+    if (!sc.hasNextInt()) {
+      System.out.println("Invalid input. Account number must be numeric.");
+      sc.next();
+      sc.nextLine();
+      return;
+    }
     int recipientAccNo = sc.nextInt();
+    sc.nextLine();
 
     // Validate account number (6 digits)
     if (String.valueOf(recipientAccNo).length() != 6) {
       System.out.println("Invalid account number. It should be a 6-digit number.");
+      return;
+    }
+
+    if (recipientAccNo == loggedInAccount.getAccNo()) {
+      System.out.println("You cannot transfer funds to the same account.");
       return;
     }
 
@@ -233,7 +245,14 @@ public class BankingApp {
 
     // Step 3: Prompt for the transfer amount
     System.out.print("Enter amount to transfer: ");
+    if (!sc.hasNextDouble()) {
+      System.out.println("Invalid input. Transfer amount must be numeric.");
+      sc.next();
+      sc.nextLine();
+      return;
+    }
     double transferAmount = sc.nextDouble();
+    sc.nextLine();
 
     // Step 4: Validate the amount
     if (transferAmount <= 0) {
@@ -247,30 +266,17 @@ public class BankingApp {
     }
 
     // Step 5: Perform the transaction
-    boolean withdrawalSuccess = loggedInAccount.withdraw(transferAmount);
+    boolean withdrawalSuccess = loggedInAccount.transferOut(transferAmount, recipientAccNo);
     if (!withdrawalSuccess) {
       System.out.println("Withdrawal failed.");
       return;
     }
 
-    boolean depositSuccess = recipientAccount.deposit(transferAmount);
+    boolean depositSuccess = recipientAccount.transferIn(transferAmount, loggedInAccount.getAccNo());
     if (!depositSuccess) {
       System.out.println("Deposit failed.");
       return;
     }
-
-    // Step 6: Log transactions
-    Transaction senderTransaction = new Transaction(
-        "Transfer",
-        -transferAmount,
-        "Transfer to account " + recipientAccNo);
-    loggedInAccount.addTransaction(senderTransaction);
-
-    Transaction recipientTransaction = new Transaction(
-        "Transfer",
-        transferAmount,
-        "Transfer from account " + loggedInAccount.getAccNo());
-    recipientAccount.addTransaction(recipientTransaction);
 
     // Step 7: Save all changes
     try {
@@ -397,6 +403,8 @@ public class BankingApp {
       // Optionally, you might want to log the specific line that caused the error
     }
 
+    loadTransactions(accounts);
+
     while (true) {
       if (loggedInAccount == null) {
         System.out.println("\n--- Welcome to the Banking App ---");
@@ -476,8 +484,6 @@ public class BankingApp {
               System.out.println("Invalid amount. Must be greater than 0.");
             } else {
               if (loggedInAccount.deposit(depAmt)) {
-                loggedInAccount.addTransaction(
-                    new Transaction("Deposit", depAmt, "Deposited to account " + loggedInAccount.getAccNo()));
                 saveAllAccounts(accounts);
                 saveAllTransactions(accounts);
                 System.out.println("Deposit successful.");
@@ -500,8 +506,6 @@ public class BankingApp {
             if (wdAmt <= 0) {
               System.out.println("Invalid amount. Must be greater than 0.");
             } else if (loggedInAccount.withdraw(wdAmt)) {
-              loggedInAccount.addTransaction(
-                  new Transaction("Withdrawal", wdAmt, "Withdrew from account " + loggedInAccount.getAccNo()));
               saveAllAccounts(accounts);
               saveAllTransactions(accounts);
               System.out.println("Withdrawal successful.");
@@ -560,7 +564,7 @@ public class BankingApp {
             break;
 
           default:
-            System.out.println("Invalid choice. Please enter a number between 1 and 5.");
+            System.out.println("Invalid choice. Please enter a number between 1 and 8.");
             pressEnterToContinue(sc);
         }
       }

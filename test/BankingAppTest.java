@@ -3,17 +3,32 @@ package test;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import src.Account;
+import src.BankingApp;
 
 public class BankingAppTest {
 
   Account acc;
+  private final PrintStream originalOut = System.out;
+  private ByteArrayOutputStream testOut;
 
   @BeforeEach
   public void setUp() {
+    testOut = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(testOut));
     acc = new Account("TestUser", 999, 1000.0, "testpass");
+  }
+
+  @AfterEach
+  public void tearDown() {
+    System.setOut(originalOut);
   }
 
   @Test
@@ -157,5 +172,41 @@ public class BankingAppTest {
     acc.withdraw(200.0);
     assertEquals(1, acc.getTransactions().size(), "One transaction should be recorded after withdrawal");
     assertEquals("Withdrawal", acc.getTransactions().get(0).getType(), "Transaction type should be 'Withdrawal'");
+  }
+
+  @Test
+  public void testTransferFundsSuccessUpdatesBalancesAndHistory() {
+    Account sender = new Account("Sender", 111111, 1000.0, "senderPass");
+    Account recipient = new Account("Recipient", 222222, 200.0, "recipientPass");
+    ArrayList<Account> accounts = new ArrayList<>();
+    accounts.add(sender);
+    accounts.add(recipient);
+
+    Scanner sc = new Scanner("222222\n150\n");
+    BankingApp.transferFunds(sender, accounts, sc);
+
+    assertEquals(850.0, sender.getBalance(), "Sender balance should decrease by transfer amount");
+    assertEquals(350.0, recipient.getBalance(), "Recipient balance should increase by transfer amount");
+    assertEquals(1, sender.getTransactions().size(), "Sender should have one transfer transaction entry");
+    assertEquals("Transfer Out", sender.getTransactions().get(0).getType(),
+        "Sender should have a transfer-out transaction entry");
+    assertEquals(1, recipient.getTransactions().size(), "Recipient should have one transfer transaction entry");
+    assertEquals("Transfer In", recipient.getTransactions().get(0).getType(),
+        "Recipient should have a transfer-in transaction entry");
+  }
+
+  @Test
+  public void testTransferFundsRejectsNonNumericRecipientAccountInput() {
+    Account sender = new Account("Sender", 111111, 1000.0, "senderPass");
+    Account recipient = new Account("Recipient", 222222, 200.0, "recipientPass");
+    ArrayList<Account> accounts = new ArrayList<>();
+    accounts.add(sender);
+    accounts.add(recipient);
+
+    Scanner sc = new Scanner("abc\n");
+    assertDoesNotThrow(() -> BankingApp.transferFunds(sender, accounts, sc),
+        "Transfer should handle invalid recipient input without throwing");
+    assertEquals(1000.0, sender.getBalance(), "Sender balance should remain unchanged on invalid input");
+    assertEquals(200.0, recipient.getBalance(), "Recipient balance should remain unchanged on invalid input");
   }
 }

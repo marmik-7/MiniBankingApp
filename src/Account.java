@@ -81,6 +81,32 @@ public class Account {
     }
   }
 
+  public boolean transferOut(double amount, int recipientAccNo) {
+    if (amount <= 0) {
+      System.out.println("Transfer amount must be greater than zero.");
+      return false;
+    }
+    if (balance < amount) {
+      System.out.println("Insufficient funds.");
+      return false;
+    }
+
+    balance -= amount;
+    addTransaction(new Transaction("Transfer Out", amount, "Transfer to account " + recipientAccNo));
+    return true;
+  }
+
+  public boolean transferIn(double amount, int senderAccNo) {
+    if (amount <= 0) {
+      System.out.println("Transfer amount must be greater than zero.");
+      return false;
+    }
+
+    balance += amount;
+    addTransaction(new Transaction("Transfer In", amount, "Transfer from account " + senderAccNo));
+    return true;
+  }
+
   public String getName() {
     return name;
   }
