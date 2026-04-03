@@ -73,15 +73,6 @@ Execute all unit and integration tests:
 java -jar "lib/junit-platform-console-standalone-1.13.0-M3.jar" execute --class-path out --scan-class-path
 ```
 
-All tests should pass (20 tests on main branch).
-
-## Data Storage
-
-- **accounts.txt**: CSV format with `name,accNo,balance,password` per line
-- **transactions.txt**: CSV format with `accNo,type,amount,description` per line
-
-Both files are automatically created and updated during application use. Add them to `.gitignore` to prevent committing user data.
-
 ## Error Handling
 
 The application validates all inputs and prevents:
@@ -95,7 +86,7 @@ The application validates all inputs and prevents:
 ## Contributing
 
 When contributing, ensure:
-1. All tests pass: `20/20` on main
+1. All tests (20/20) pass
 2. No new compiler errors
 3. Folder structure is preserved (`src/`, `test/`, `lib/`)
 4. Runtime files (`accounts.txt`, `transactions.txt`) remain at project root
