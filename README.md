@@ -1,6 +1,6 @@
 # MiniBankingApp
 
-A simple command-line banking application built with Java that allows users to create accounts, login, deposit/withdraw funds, transfer money between accounts, and manage their passwords.
+A Java banking app with both a command-line experience and a browser-based UI. It supports account creation, login, deposit/withdraw, transfers, password changes, transaction history, and account deletion.
 
 ## Features
 
@@ -12,6 +12,7 @@ A simple command-line banking application built with Java that allows users to c
 - **Data Persistence**: All accounts and transactions are saved to text files
 - **Input Validation**: Comprehensive validation for account numbers, amounts, and passwords
 - **Web Experience**: Built-in REST API + browser UI for account operations
+- **Section-Level Feedback**: Action results and validation messages appear beside each form in the web UI
 
 ## Project Structure
 
@@ -40,7 +41,7 @@ transactions.txt       - Persistent transaction history (generated at runtime)
 ## Requirements
 
 - Java 21 or higher (OpenJDK/Eclipse Adoptium)
-- Maven-compatible build or direct javac compilation
+- Direct `javac` compilation (VS Code Java extension also supported)
 
 ## Setup & Building
 
@@ -58,7 +59,7 @@ transactions.txt       - Persistent transaction history (generated at runtime)
 
 3. Compile all source and test files:
    ```powershell
-   javac -cp "lib/junit-platform-console-standalone-1.13.0-M3.jar" -d out src/*.java test/*.java
+  javac --add-modules jdk.httpserver -cp "lib/junit-platform-console-standalone-1.13.0-M3.jar" -d out src/*.java test/*.java
    ```
 
 ### Option 2: Using VS Code
@@ -95,18 +96,13 @@ java --add-modules jdk.httpserver -cp out src.WebBankingServer
 http://localhost:8080
 ```
 
-### API Endpoints (Summary)
+### Web Dashboard Layout
 
-- `POST /api/signup`
-- `POST /api/login`
-- `POST /api/logout`
-- `GET /api/me`
-- `DELETE /api/me`
-- `GET /api/me/transactions`
-- `POST /api/me/deposit`
-- `POST /api/me/withdraw`
-- `POST /api/me/transfer`
-- `POST /api/me/password`
+- Move Money spans full width
+- Transactions is left column
+- Session is right column
+- Security is left column (below Transactions)
+- Delete Account is right column (below Session)
 
 ## Running Tests
 
@@ -115,6 +111,8 @@ Execute all unit and integration tests:
 ```powershell
 java -jar "lib/junit-platform-console-standalone-1.13.0-M3.jar" execute --class-path out --scan-class-path
 ```
+
+Note: compile first so the `out` directory contains up-to-date classes.
 
 ## Error Handling
 
@@ -128,9 +126,9 @@ The application validates all inputs and prevents:
 ## Contributing
 
 When contributing, ensure:
-1. All tests (23/23) pass
+1. All tests (26/26) pass
 2. No new compiler errors
-3. Folder structure is preserved (`src/`, `test/`, `lib/`)
+3. Folder structure is preserved (`src/`, `test/`, `lib/`, `web/`)
 4. Runtime files (`accounts.txt`, `transactions.txt`) remain at project root
 
 ## License
