@@ -23,9 +23,9 @@ public class BankingApp {
         return password;
       } else {
         if (password.trim().isEmpty()) {
-          System.out.println("Error: Password cannot be empty.");
+          Cli.showError("Password cannot be empty.");
         } else {
-          System.out.println("Error: Password must be at least 6 characters long.");
+          Cli.showError("Password must be at least 6 characters long.");
         }
       }
     }
@@ -41,9 +41,9 @@ public class BankingApp {
       System.out.print("Enter account holder's name: ");
       name = sc.nextLine();
       if (name.trim().isEmpty()) {
-        System.out.println("Error: Name cannot be empty.");
+        Cli.showError("Name cannot be empty.");
       } else if (!Pattern.matches("^[a-zA-Z\\s.'-]+$", name)) {
-        System.out.println("Error: Name contains invalid characters.");
+        Cli.showError("Name contains invalid characters.");
       } else {
         break;
       }
@@ -52,9 +52,9 @@ public class BankingApp {
     while (true) {
       accNo = Cli.getIntInput(sc, "Enter account number (6 digits): ");
       if (String.valueOf(accNo).length() != 6) {
-        System.out.println("Error: Account number must be exactly 6 digits.");
+        Cli.showError("Account number must be exactly 6 digits.");
       } else if (bank.findAccountByNumber(accNo) != null) {
-        System.out.println("Account number already exists. Please use a different number.\n");
+        Cli.showError("Account number already exists. Please use a different number.");
       } else {
         break;
       }
@@ -62,7 +62,7 @@ public class BankingApp {
 
     balance = Cli.getDoubleInput(sc, "Enter initial balance: ");
     while (balance < 0) {
-      System.out.println("Error: Initial balance cannot be negative.");
+      Cli.showError("Initial balance cannot be negative.");
       balance = Cli.getDoubleInput(sc, "Enter initial balance: ");
     }
 
@@ -72,9 +72,9 @@ public class BankingApp {
       Account newAccount = new Account(name, accNo, balance, password);
       bank.addAccount(newAccount);
       bank.saveAllAccounts();
-      System.out.println("Account created successfully!\n");
+      Cli.showSuccess("Account created successfully.");
     } catch (IllegalArgumentException e) {
-      System.out.println("Error creating account: " + e.getMessage());
+      Cli.showError("Error creating account: " + e.getMessage());
     }
   }
 
@@ -104,10 +104,10 @@ public class BankingApp {
         return true;
       } else {
         attempts++;
-        System.out.println("Wrong Password. Attempts left: " + (MAX_PASSWORD_ATTEMPTS - attempts));
+        Cli.showError("Wrong password. Attempts left: " + (MAX_PASSWORD_ATTEMPTS - attempts));
       }
     }
-    System.out.println("Too many failed attempts.");
+    Cli.showError("Too many failed attempts.");
     return false;
   }
 
@@ -122,44 +122,50 @@ public class BankingApp {
     if (acc != null) {
       if (verifyPassword(acc)) {
         loggedInAccount = acc;
-        System.out.println("Login successful. Welcome, " + acc.getName() + "!");
+        Cli.showSuccess("Login successful. Welcome, " + acc.getName() + "!");
       }
     } else {
-      System.out.println("Account not found for number: " + accNo);
+      Cli.showError("Account not found for number: " + accNo);
     }
   }
 
   public static void logout() {
     loggedInAccount = null;
-    System.out.println("You have been logged out.\n");
+    Cli.showInfo("You have been logged out.");
   }
 
   public static void transferFunds() {
     int recipientAccNo = Cli.getIntInput(sc, "Enter recipient's account number (6 digits): ");
     if (String.valueOf(recipientAccNo).length() != 6) {
-      System.out.println("Invalid account number. It should be a 6-digit number.");
+      Cli.showError("Invalid account number. It should be a 6-digit number.");
       return;
     }
 
     if (recipientAccNo == loggedInAccount.getAccNo()) {
-      System.out.println("You cannot transfer funds to the same account.");
+      Cli.showError("You cannot transfer funds to the same account.");
       return;
     }
 
     Account recipientAccount = bank.findAccountByNumber(recipientAccNo);
 
     if (recipientAccount == null) {
-      System.out.println("Recipient account not found.");
+      Cli.showError("Recipient account not found.");
       return;
     }
 
     double transferAmount = Cli.getDoubleInput(sc, "Enter amount to transfer: ");
     if (transferAmount <= 0) {
-      System.out.println("Amount must be greater than 0.");
+      Cli.showError("Amount must be greater than 0.");
       return;
     }
     if (loggedInAccount.getBalance() < transferAmount) {
-      System.out.println("Insufficient funds for transfer.");
+      Cli.showError("Insufficient funds for transfer.");
+      return;
+    }
+
+    if (!Cli.confirm(sc, "Confirm transfer of $" + String.format("%.2f", transferAmount) + " to account "
+        + recipientAccNo + "?")) {
+      Cli.showInfo("Transfer cancelled.");
       return;
     }
 
@@ -171,7 +177,7 @@ public class BankingApp {
             new Transaction("Transfer", transferAmount, "Transfer from account " + loggedInAccount.getAccNo()));
         bank.saveAllAccounts();
         bank.saveAllTransactions();
-        System.out.println("Transfer successful!");
+        Cli.showSuccess("Transfer successful.");
         System.out.printf("Transferred $%.2f from account %s to account %s.%n", transferAmount,
             loggedInAccount.getAccNo(), recipientAccNo);
       } else {
@@ -218,21 +224,19 @@ public class BankingApp {
   }
 
   public static void deleteAccount() {
-    System.out.println("To delete your account, please verify your password.");
+    Cli.showInfo("To delete your account, please verify your password.");
     if (verifyPassword(loggedInAccount)) {
-      System.out.print("Are you sure you want to delete your account? (yes/no): ");
-      String confirm = sc.nextLine();
-      if (confirm.equalsIgnoreCase("yes")) {
+      if (Cli.confirm(sc, "Are you sure you want to permanently delete your account?")) {
         bank.removeAccount(loggedInAccount);
         bank.saveAllAccounts();
         bank.saveAllTransactions();
-        System.out.println("Your account has been deleted.");
+        Cli.showSuccess("Your account has been deleted.");
         loggedInAccount = null;
       } else {
-        System.out.println("Account deletion cancelled.");
+        Cli.showInfo("Account deletion cancelled.");
       }
     } else {
-      System.out.println("Password verification failed. Account not deleted.");
+      Cli.showError("Password verification failed. Account not deleted.");
     }
   }
 
@@ -257,8 +261,12 @@ public class BankingApp {
             sc.close();
             System.exit(0);
             break;
+          case 9:
+            Cli.displayMainHelp();
+            Cli.pressEnterToContinue(sc);
+            break;
           default:
-            System.out.println("Invalid choice. Please enter a number between 1 and 3.");
+            Cli.showError("Invalid choice. Please enter 1, 2, 3, or 9.");
             Cli.pressEnterToContinue(sc);
         }
       } else {
@@ -272,14 +280,14 @@ public class BankingApp {
           case 2:
             double depAmt = Cli.getDoubleInput(sc, "Enter amount to deposit: ");
             if (depAmt <= 0) {
-              System.out.println("Invalid amount. Must be greater than 0.");
+              Cli.showError("Invalid amount. Must be greater than 0.");
             } else {
               loggedInAccount.deposit(depAmt);
               loggedInAccount.addTransaction(
                   new Transaction("Deposit", depAmt, "Deposited to account " + loggedInAccount.getAccNo()));
               bank.saveAllAccounts();
               bank.saveAllTransactions();
-              System.out.println("Deposit successful.");
+              Cli.showSuccess("Deposit successful.");
               System.out.printf("New Balance: $%.2f%n", loggedInAccount.getBalance());
             }
             Cli.pressEnterToContinue(sc);
@@ -287,13 +295,13 @@ public class BankingApp {
           case 3:
             double wdAmt = Cli.getDoubleInput(sc, "Enter amount to withdraw: ");
             if (wdAmt <= 0) {
-              System.out.println("Invalid amount. Must be greater than 0.");
+              Cli.showError("Invalid amount. Must be greater than 0.");
             } else if (loggedInAccount.withdraw(wdAmt)) {
               loggedInAccount.addTransaction(
                   new Transaction("Withdrawal", -wdAmt, "Withdrew from account " + loggedInAccount.getAccNo()));
               bank.saveAllAccounts();
               bank.saveAllTransactions();
-              System.out.println("Withdrawal successful.");
+              Cli.showSuccess("Withdrawal successful.");
               System.out.printf("New Balance: $%.2f%n", loggedInAccount.getBalance());
             }
             Cli.pressEnterToContinue(sc);
@@ -318,8 +326,12 @@ public class BankingApp {
             logout();
             Cli.pressEnterToContinue(sc);
             break;
+          case 9:
+            Cli.displayLoggedInHelp();
+            Cli.pressEnterToContinue(sc);
+            break;
           default:
-            System.out.println("Invalid choice. Please enter a number from the menu options.");
+            Cli.showError("Invalid choice. Please use one of the listed options.");
             Cli.pressEnterToContinue(sc);
         }
       }

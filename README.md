@@ -11,6 +11,7 @@ A simple command-line banking application built with Java that allows users to c
 - **Password Management**: Change account passwords securely
 - **Data Persistence**: All accounts and transactions are saved to text files
 - **Input Validation**: Comprehensive validation for account numbers, amounts, and passwords
+- **Web Experience**: Built-in REST API + browser UI for account operations
 
 ## Project Structure
 
@@ -20,7 +21,12 @@ src/
   Bank.java             - Bank data model and persistence (refactored)
   BankingApp.java       - Main application orchestrator
   Cli.java              - CLI/UI helper methods (refactored)
+  WebBankingServer.java - REST API + static web server (new)
   Transaction.java      - Transaction record model
+web/
+  index.html            - Web app shell
+  styles.css            - Responsive UI styles
+  app.js                - Frontend API integration
 test/
   AccountTest.java      - Unit tests for Account class
   BankTest.java         - Unit tests for Bank persistence (refactored)
@@ -68,6 +74,39 @@ java -cp out src.BankingApp
 ```
 
 Or from within VS Code, use the Run button on the main method.
+
+## Running the Web App (REST API + UI)
+
+1. Compile with the HTTP server module enabled:
+
+```powershell
+javac --add-modules jdk.httpserver -cp "lib/junit-platform-console-standalone-1.13.0-M3.jar" -d out src/*.java test/*.java
+```
+
+2. Start the web server:
+
+```powershell
+java --add-modules jdk.httpserver -cp out src.WebBankingServer
+```
+
+3. Open in browser:
+
+```text
+http://localhost:8080
+```
+
+### API Endpoints (Summary)
+
+- `POST /api/signup`
+- `POST /api/login`
+- `POST /api/logout`
+- `GET /api/me`
+- `DELETE /api/me`
+- `GET /api/me/transactions`
+- `POST /api/me/deposit`
+- `POST /api/me/withdraw`
+- `POST /api/me/transfer`
+- `POST /api/me/password`
 
 ## Running Tests
 

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiniBanking Web</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Bricolage+Grotesque:wght@600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/web/styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <main class="shell">
+    <section id="login-view" class="card show">
+      <p class="eyebrow">MiniBanking</p>
+      <h1 id="auth-title">Sign in to your account</h1>
+      <p id="auth-subtitle" class="sub">Use your existing 6-digit account number and password.</p>
+      <div class="auth-switch" role="tablist" aria-label="Authentication mode">
+        <button id="show-signup-btn" type="button" class="btn ghost is-active">Create Account</button>
+        <button id="show-login-btn" type="button" class="btn ghost">Login</button>
+      </div>
+
+      <form id="login-form" class="stack" autocomplete="off">
+        <label>
+          Account Number
+          <input type="number" id="login-acc-no" placeholder="123456" required />
+        </label>
+        <label>
+          Password
+          <input type="password" id="login-password" placeholder="At least 6 characters" required />
+        </label>
+        <button type="submit" class="btn primary">Login</button>
+      </form>
+
+      <form id="signup-form" class="stack hidden" autocomplete="off">
+        <label>
+          Full Name
+          <input type="text" id="signup-name" placeholder="Jane Doe" required />
+        </label>
+        <label>
+          Account Number
+          <input type="number" id="signup-acc-no" placeholder="123456" required />
+        </label>
+        <label>
+          Initial Balance
+          <input type="number" step="0.01" min="0" id="signup-initial-balance" placeholder="0.00" />
+        </label>
+        <label>
+          Password
+          <input type="password" id="signup-password" placeholder="At least 6 characters" required />
+        </label>
+        <button type="submit" class="btn primary">Create & Sign In</button>
+      </form>
+
+      <p id="login-feedback" class="feedback" aria-live="polite"></p>
+    </section>
+
+    <section id="dashboard-view" class="grid hidden">
+      <header class="hero card card-hero">
+        <p class="eyebrow">Dashboard</p>
+        <h2 id="welcome-text">Welcome</h2>
+        <div class="stats">
+          <article>
+            <span>Account</span>
+            <strong id="account-number">-</strong>
+          </article>
+          <article>
+            <span>Balance</span>
+            <strong id="account-balance">$0.00</strong>
+          </article>
+        </div>
+        <p id="hero-feedback" class="feedback" aria-live="polite"></p>
+      </header>
+
+      <section class="card card-move-money">
+        <h3>Move Money</h3>
+        <div class="actions-grid">
+          <form id="deposit-form" class="stack action-form">
+            <h4>Deposit</h4>
+            <input type="number" step="0.01" min="0.01" id="deposit-amount" placeholder="Amount" required />
+            <button type="submit" class="btn primary">Deposit</button>
+            <p id="deposit-feedback" class="feedback" aria-live="polite"></p>
+          </form>
+
+          <form id="withdraw-form" class="stack action-form">
+            <h4>Withdraw</h4>
+            <input type="number" step="0.01" min="0.01" id="withdraw-amount" placeholder="Amount" required />
+            <button type="submit" class="btn primary">Withdraw</button>
+            <p id="withdraw-feedback" class="feedback" aria-live="polite"></p>
+          </form>
+
+          <form id="transfer-form" class="stack action-form">
+            <h4>Transfer</h4>
+            <input type="number" id="transfer-to" placeholder="Recipient Account #" required />
+            <input type="number" step="0.01" min="0.01" id="transfer-amount" placeholder="Amount" required />
+            <button type="submit" class="btn primary">Transfer</button>
+            <p id="transfer-feedback" class="feedback" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="card card-transactions">
+        <div class="row">
+          <h3>Transactions</h3>
+          <button id="reload-transactions" class="btn ghost">Reload</button>
+        </div>
+        <ul id="transactions-list" class="transactions"></ul>
+        <p id="transactions-feedback" class="feedback" aria-live="polite"></p>
+      </section>
+
+      <section class="card session-zone">
+        <h3>Session</h3>
+        <p class="session-copy">Current login session for this device.</p>
+        <div class="session-meta">
+          <span>Account</span>
+          <strong id="session-account">-</strong>
+        </div>
+        <div class="session-meta">
+          <span>Status</span>
+          <strong>Active</strong>
+        </div>
+        <button id="logout-btn" class="btn ghost" type="button">Logout</button>
+      </section>
+
+      <section class="card card-security">
+        <h3>Security</h3>
+        <form id="password-form" class="stack slim">
+          <input type="password" id="current-password" placeholder="Current password" required />
+          <input type="password" id="new-password" placeholder="New password (min 6 chars)" required />
+          <button type="submit" class="btn muted">Change Password</button>
+          <p id="password-feedback" class="feedback" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="card danger-zone">
+        <h3>Delete Account</h3>
+        <p>Delete this account permanently. This cannot be undone.</p>
+        <form id="delete-form" class="stack slim">
+          <input type="password" id="delete-password" placeholder="Confirm password" required />
+          <button type="submit" class="btn danger">Delete Account</button>
+          <p id="delete-feedback" class="feedback" aria-live="polite"></p>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script src="/web/app.js"></script>
+</body>
+</html>
